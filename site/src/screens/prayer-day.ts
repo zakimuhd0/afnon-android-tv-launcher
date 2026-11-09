@@ -35,8 +35,8 @@ export function saveFacing(v: number) {
 // Text.java methods with logic, used only here.
 const qiblaDirection = (t: Text, bearing: number, city: string) => t.octant(bearing) + (t.ar ? ' · من ' : ' · from ') + city;
 const facingLine = (t: Text, facing: number) => (t.ar ? 'تجلس مواجهًا: ' : 'You face: ') + t.bearingLabel(facing);
-/** Qibla bearing from the city (prayer.ts's `new Qibla()` returns an object, not the number). */
-export const qiblaOf = (c: Ctx) => Qibla(new Coordinates(c.day.city.lat, c.day.city.lng));
+/** Qibla bearing from the city. */
+export const qiblaOf = (c: Ctx) => Qibla(new Coordinates(cityOf(c.prefs).lat, cityOf(c.prefs).lng));
 export const relativeOf = (qibla: number, facing: number) => (((qibla - facing) % 360) + 360) % 360;
 
 /** The dial's needle and (in room mode) its north marker, as SVG transforms. */
@@ -53,17 +53,18 @@ export function prayerDayModel(c: Ctx): Model {
   const bells = loadBells();
   const facing = loadFacing();
   const qibla = qiblaOf(c);
+  const city = cityOf(prefs);
 
   // The arch: Home's countdown, with the method and Asr school below (no Ramadan wording here).
   const arch = archModel(c);
   arch.html.archLabel = day.friday && day.nextIndex === DHUHR ? t.s('jumuahLabel') : t.s('nextPrayer');
   arch.html.archName = names[day.nextIndex];
-  arch.html.archSub = t.methodName(methodOf(prefs));
-  arch.html.archSub2 = t.school(prefs.hanafi);
+  arch.html.archSub = 'JAKIM / e-Solat';
+  arch.html.archSub2 = '';
 
   const html: Record<string, string> = {
     ...arch.html,
-    dates: hijri(t, day) + t.sep() + gregorian(t, now) + t.sep() + day.city[t.lang],
+    dates: hijri(t, day) + t.sep() + gregorian(t, now) + t.sep() + city.daerah,
     deg: t.d(Math.round(qibla) + '°'),
     roomLabel: t.roomButton(facing >= 0),
   };

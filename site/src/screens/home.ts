@@ -1,6 +1,6 @@
-// Home's live content, from MainActivity.renderMinute and Screen.renderCountdown.
 import tokens from '../../../afnon-mihrab/tokens.json';
 import type { Ctx, Model } from '../lib/ctx';
+import { cityOf } from '../lib/data';
 import { DHUHR, FAJR, MAGHRIB, clock, duration, gregorian, hijri, secondsUntil } from '../lib/prayer';
 
 const MIN = { ms: 1 / 60000, s: 1 / 60, min: 1 } as const;
@@ -17,10 +17,11 @@ export function prayerNames(c: Ctx) {
 /** Arch label, name, countdown and sub lines (Home), with the approaching state. */
 export function archModel(c: Ctx) {
   const { t, day, now, h24 } = c;
+  const city = cityOf(c.prefs);
   const names = prayerNames(c);
   const nextTime = clock(t, day.nextTime, h24);
   let label = t.s('nextPrayer'), name = names[day.nextIndex];
-  let sub = t.s('adhanAt') + ' ' + nextTime + t.sep() + day.city[t.lang], sub2 = '';
+  let sub = t.s('adhanAt') + ' ' + nextTime + t.sep() + city.daerah, sub2 = '';
   if (day.friday && day.nextIndex === DHUHR) label = t.s('jumuahLabel');
   if (day.kahf) sub2 = t.s('kahf');
   if (day.ramadan) {
@@ -28,7 +29,7 @@ export function archModel(c: Ctx) {
     if (day.nextIndex === MAGHRIB) {
       label = t.s('iftarIn');
       name = t.s('iftar');
-      sub = t.list('prayerNames')[MAGHRIB] + ' ' + nextTime + t.sep() + day.city[t.lang];
+      sub = t.list('prayerNames')[MAGHRIB] + ' ' + nextTime + t.sep() + city.daerah;
     }
   }
   const left = secondsUntil(day.nextTime, now);
@@ -61,7 +62,7 @@ export function homeModel(c: Ctx): Model {
     html: {
       clock: clock(t, now, h24, 0.4),
       gdate: gregorian(t, now),
-      hdate: hijri(t, day) + t.sep() + day.city[t.lang],
+      hdate: hijri(t, day) + t.sep() + cityOf(c.prefs).daerah,
       ...arch.html,
       cells: cellsHtml(c),
       cardTitle: t.apTitle(names[day.nextIndex], minutes, duration(arch.left, false)),

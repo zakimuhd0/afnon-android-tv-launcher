@@ -1,7 +1,8 @@
 // PrayerDay.java and Screen.java's clock helpers, on adhan-js (the JavaScript port of the app's adhan-java).
 import { CalculationMethod, Coordinates, HighLatitudeRule, Madhab, PrayerTimes, Qibla } from 'adhan';
 import type { Text } from './text';
-import { adjustOf, cityOf, methodOf, type Prefs } from './data';
+import { adjustOf, cityOf, type Prefs } from './data';
+export const methodOf = (p: Prefs) => p.method ?? 'MOON_SIGHTING_COMMITTEE';
 
 export const FAJR = 0, SUNRISE = 1, DHUHR = 2, ASR = 3, MAGHRIB = 4, ISHA = 5;
 const RAMADAN = 8; // 0-based, as IslamicCalendar.RAMADAN

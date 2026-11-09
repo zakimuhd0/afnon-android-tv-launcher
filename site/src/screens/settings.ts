@@ -3,8 +3,8 @@
 import voicesJson from '../data/adhans.json';
 import newsJson from '../data/news.json';
 import type { Ctx } from '../lib/ctx';
-import { CITIES, METHODS, REGIONS, STATIONS, adjustOf, cityOf, methodOf, stationOf, type Prefs, type Station } from '../lib/data';
-import { ASR, clock, dayAdjustment, hijri, methodParams } from '../lib/prayer';
+import { CITIES, STATES, STATIONS, adjustOf, cityOf, stationOf, type Prefs, type Station } from '../lib/data';
+import { ASR, clock, hijri } from '../lib/prayer';
 import type { Text } from '../lib/text';
 import { loadFacing } from './prayer-day';
 
@@ -83,9 +83,7 @@ export function rowsFor(c: Ctx, section: number, radioOn = false): Row[] {
   const st = stationOf(p);
   switch (section) {
     case PRAYER: return [
-      { id: 'city', kind: 'value', label: t.s('location'), help: locationHelp(t, city.lat, city.lng), value: placeOf(t, city) },
-      { id: 'method', kind: 'value', label: t.s('method'), help: methodAngles(t, methodOf(p)), value: t.methodName(methodOf(p)) },
-      { id: 'school', kind: 'seg', label: t.s('asrSchool'), help: t.s('asrSchoolHelp'), segs: t.list('asrSchools'), selected: p.hanafi ? 1 : 0 },
+      { id: 'city', kind: 'value', label: t.s('location'), help: city.id + ' · ' + city.negeri, value: city.daerah + ' (' + city.id + ')' },
       { id: 'hijri', kind: 'step', label: t.s('hijriAdjust'), help: (t.ar ? 'اليوم: ' : 'Today: ') + hijri(t, c.day), value: t.days(p.hijriOffset) },
       { id: 'room', kind: 'value', label: t.s('roomTitle'), help: t.s('roomHelp'), value: facing < 0 ? t.s('notSet') : t.bearingLabel(facing) },
     ];
@@ -221,16 +219,8 @@ export const previewHtml = (c: Ctx) => clock(c.t, c.day.times[ASR], c.h24);
 
 export type Item = { label: string; chosen: boolean };
 
-/** The region a city's country is in (index into REGIONS). */
-export const regionOf = (c: (typeof CITIES)[number]) => REGIONS.findIndex((r) => r.includes(c.countryEn));
-/** One region's countries, A to Z in the page's language ("ال" not counted). */
-export const countries = (t: Text, region: number) =>
-  REGIONS[region]
-    .map((en) => CITIES.find((c) => c.countryEn === en)!)
-    .map((c) => (t.ar ? c.countryAr : c.countryEn))
-    .sort((a, b) => new Intl.Collator(t.ar ? 'ar' : 'en').compare(a.replace(/^ال/, ''), b.replace(/^ال/, '')));
-export const citiesOf = (t: Text, country: string) => CITIES.filter((c) => (t.ar ? c.countryAr : c.countryEn) === country);
-export const methodItems = (t: Text, p: Prefs): Item[] => METHODS.map((m) => ({ label: t.methodName(m), chosen: m === methodOf(p) }));
+export const states = (t: Text) => STATES;
+export const citiesOf = (t: Text, state: string) => CITIES.filter((c) => c.negeri === state);
 export const stationsOf = (reciters: boolean) => STATIONS.filter((s) => !!s.reciter === reciters);
 
 export function chooserHtml(t: Text, title: string, items: Item[]) {
