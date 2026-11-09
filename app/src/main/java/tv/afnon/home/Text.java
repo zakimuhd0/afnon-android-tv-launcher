@@ -187,41 +187,29 @@ final class Text {
         return ar ? "العصر: الجمهور (شافعي)" : "Asr: standard (Shafi‘i)";
     }
 
-    String methodName(Method m) {
-        switch (m.id) {
-            case "UMM_AL_QURA": return ar ? "أم القرى، مكة المكرمة" : "Umm al-Qura, Makkah";
-            case "MUSLIM_WORLD_LEAGUE": return ar ? "رابطة العالم الإسلامي" : "Muslim World League";
-            case "KARACHI": return ar ? "جامعة العلوم الإسلامية، كراتشي" : "University of Islamic Sciences, Karachi";
-            case "DUBAI": return ar ? "دبي" : "Dubai";
-            case "KUWAIT": return ar ? "الكويت" : "Kuwait";
-            case "QATAR": return ar ? "قطر" : "Qatar";
-            case "NORTH_AMERICA": return ar ? "الجمعية الإسلامية لأمريكا الشمالية" : "ISNA, North America";
-            case "MOON_SIGHTING_COMMITTEE": return ar ? "لجنة رؤية الهلال" : "Moonsighting Committee";
-            case "SINGAPORE": return ar ? "سنغافورة" : "Singapore";
-            case "OMAN_AWQAF": return ar ? "وزارة الأوقاف والشؤون الدينية، سلطنة عُمان" : "Ministry of Awqaf, Oman";
-            case "MOROCCO_HABOUS": return ar ? "وزارة الأوقاف والشؤون الإسلامية، المملكة المغربية" : "Ministry of Habous, Morocco";
-            default: return ar ? "الهيئة المصرية العامة للمساحة" : "Egyptian General Authority of Survey";
+    String methodName(CalculationMethod m) {
+        switch (m) {
+            case UMM_AL_QURA: return ar ? "أم القرى، مكة المكرمة" : "Umm al-Qura, Makkah";
+            case MUSLIM_WORLD_LEAGUE: return ar ? "رابطة العالم الإسلامي" : "Muslim World League";
+            case KARACHI: return ar ? "جامعة العلوم الإسلامية، كراتشي" : "University of Islamic Sciences, Karachi";
+            case DUBAI: return ar ? "دبي" : "Dubai";
+            case KUWAIT: return ar ? "الكويت" : "Kuwait";
+            case QATAR: return ar ? "قطر" : "Qatar";
+            case NORTH_AMERICA: return ar ? "الجمعية الإسلامية لأمريكا الشمالية" : "ISNA, North America";
+            case MOON_SIGHTING_COMMITTEE: return ar ? "لجنة رؤية الهلال (JAKIM)" : "Moonsighting Committee (JAKIM)";
+            case SINGAPORE: return ar ? "سنغافورة" : "Singapore";
+            default: return ar ? "جاكيم (JAKIM) / رؤية الهلال" : "JAKIM / Moonsighting Committee";
         }
     }
 
-    /**
-     * "Fajr angle 19.5° · Isha 17.5°", or Isha as minutes after Maghrib where the method fixes it that way, and
-     * the minutes a method adds to Dhuhr, Asr and Maghrib where it does.
-     */
-    String methodAngles(Method m) {
-        CalculationParameters p = m.parameters();
+    /** "Fajr angle 19.5° · Isha 17.5°", or Isha as minutes after Maghrib where the method fixes it that way. */
+    String methodAngles(CalculationMethod m) {
+        CalculationParameters p = m.getParameters();
         String fajr = (ar ? "زاوية الفجر " : "Fajr angle ") + trim(p.fajrAngle) + "°";
         String isha = p.ishaInterval > 0
             ? (ar ? "العشاء بعد المغرب بـ " + p.ishaInterval + " دقيقة" : "Isha " + p.ishaInterval + " min after Maghrib")
-                // PrayerDay makes Umm al-Qura's 120 in Ramadan.
-                + (m == Method.UMM_AL_QURA ? (ar ? " (120 في رمضان)" : " (120 in Ramadan)") : "")
             : (ar ? "العشاء " : "Isha ") + trim(p.ishaAngle) + "°";
-        int plus = m.dayAdjustment();
-        String extra = m == Method.MOROCCO_HABOUS
-            ? ar ? " · الظهر +5 دقائق · أفق كل مدينة" : " · Dhuhr +5 min · each city's horizon"
-            : plus == 0 ? ""
-            : ar ? " · +" + plus + " دقائق للظهر والعصر والمغرب" : " · Dhuhr, Asr and Maghrib +" + plus + " min";
-        return d(fajr + " · " + isha + extra);
+        return d(fajr + " · " + isha);
     }
 
     private static String trim(double v) {
@@ -349,8 +337,8 @@ final class Text {
     String region() { return ar ? "المنطقة" : "Region"; }
     /** Location's first step, in the order of Prefs.REGIONS. */
     String[] regions() {
-        return ar ? new String[] {"الدول العربية", "آسيا", "أوروبا", "الأمريكتان", "أفريقيا", "أوقيانوسيا"}
-            : new String[] {"Arab world", "Asia", "Europe", "Americas", "Africa", "Oceania"};
+        return ar ? new String[] {"ماليزيا"}
+            : new String[] {"Malaysia"};
     }
     String locationHelp(double lat, double lng) {
         String ns = lat >= 0 ? (ar ? "ش" : "N") : (ar ? "ج" : "S");
@@ -401,6 +389,21 @@ final class Text {
     String nightOff() { return ar ? "إيقاف الوضع الليلي" : "Night mode off"; }
     String networkRow() { return ar ? "إعدادات الشبكة في التلفاز" : "TV network settings"; }
     String networkHelp() { return ar ? "واي فاي وإيثرنت" : "Wi-Fi and Ethernet"; }
+    String launcherRow() { return ar ? "إدارة المشغّل الافتراضي" : "Launcher Manager"; }
+    String launcherHelp() {
+        return ar ? "فتح إعدادات المشغّل القديم لإلغاء التعيين الافتراضي أو تعطيله"
+                  : "Open stock launcher settings to Clear Defaults or Disable";
+    }
+    String overrideHomeRow() { return ar ? "تجاوز المشغّل الافتراضي" : "Override Stock Launcher"; }
+    String overrideHomeHelp() {
+        return ar ? "التحويل القسري إلى أفنون عند الضغط على زر الرئيسية (TiVo / Google TV)"
+                  : "Redirects to Afnon when Home button is pressed (TiVo Stream 4K / Google TV)";
+    }
+    String accessibilityRow() { return ar ? "إمكانية الوصول" : "Accessibility Settings"; }
+    String accessibilityHelp() {
+        return ar ? "تفعيل خدمات أفنون للتنبيهات وإمكانية الوصول"
+                  : "Enable Afnon services in Accessibility Settings";
+    }
     String deviceRow() { return ar ? "إعدادات التلفاز" : "TV settings"; }
     String deviceHelp() { return ar ? "الصورة والصوت والتطبيقات والنظام" : "Picture, sound, apps and system"; }
     // Settings → Device → Afnon updates (Updates): Afnon contacts GitHub only when OK is pressed there.

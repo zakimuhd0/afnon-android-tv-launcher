@@ -63,7 +63,7 @@ Afnon started from [cleanyourtv](https://github.com/Gathin23/cleanyourtv):
   [published timetable](https://www.mara.gov.om/arabic/calendar_page1.asp) so every prayer is within a minute or two
   of it (see `Method.OMAN_AWQAF`). Morocco's start on the Ministry of Habous's rules, recovered from its
   [timetables](https://habous.gov.ma) (see `Habous`); Morocco has kept GMT all year since 20 September 2026, so a TV
-  with older time-zone data needs a GMT+0 zone until its firmware updates. The Hijri date and Ramadan mode always
+  with older time-city data needs a GMT+0 city until its firmware updates. The Hijri date and Ramadan mode always
   use the Umm al-Qura calendar, so where local moon sighting differs (the United States, for one) set the offset.
 - **Qibla and room direction.** The Qibla bearing from your city, and a one-time "which way does
   the TV face" setting, so the screen can say *"Qibla is behind you"*.

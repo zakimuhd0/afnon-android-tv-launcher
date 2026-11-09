@@ -30,12 +30,12 @@ public class RemoteKeys extends AccessibilityService {
      * installer replaces it through {@link SetupProvider} (pref "keys": "KEY=package,KEY=package").
      */
     static final String[][] APP_KEYS = {
-        {"KEYCODE_BUTTON_3", "com.google.android.youtube.tv"},
-        {"KEYCODE_TCL_YOUTUBE", "com.google.android.youtube.tv"},
-        {"KEYCODE_TCL_NETFLIX", "net.mbc.shahidTV"},
-        {"KEYCODE_INFO", "dev.ctv.tv"},
-        // The Web button: TCL's own keycode with no Android name, sent over IR (scancode 651).
-        {"4159", "com.tcl.browser"},
+            {"KEYCODE_BUTTON_3", "com.google.android.youtube.tv"},
+            {"KEYCODE_TCL_YOUTUBE", "com.google.android.youtube.tv"},
+            {"KEYCODE_TCL_NETFLIX", "net.mbc.shahidTV"},
+            {"KEYCODE_INFO", "dev.ctv.tv"},
+            // The Web button: TCL's own keycode with no Android name, sent over IR (scancode 651).
+            {"4159", "com.tcl.browser"},
     };
     /** TCL remotes send Settings as 83 (KEYCODE_NOTIFICATION), which the stock home turned into its panel. */
     private static final int SETTINGS_KEY = KeyEvent.KEYCODE_NOTIFICATION;
@@ -199,10 +199,22 @@ public class RemoteKeys extends AccessibilityService {
     @Override
     protected boolean onKeyEvent(KeyEvent event) {
         int code = event.getKeyCode();
+        if ((code == KeyEvent.KEYCODE_HOME || code == KeyEvent.KEYCODE_GUIDE) && Prefs.overrideHome(this)) {
+            if (event.getAction() == KeyEvent.ACTION_UP && !event.isCanceled()) {
+                try {
+                    Intent homeIntent = new Intent(this, MainActivity.class);
+                    homeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                            | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivity(homeIntent);
+                } catch (Exception ignored) {}
+            }
+            return true;
+        }
         String app = appKeys.get(code);
         Intent open;
         if (app != null) open = null;
-        // Afnon Settings, which lists the TV's own under Device settings.
+            // Afnon Settings, which lists the TV's own under Device settings.
         else if (code == SETTINGS_KEY || code == KeyEvent.KEYCODE_SETTINGS) open = new Intent(this, SettingsActivity.class);
         else if (code == KeyEvent.KEYCODE_TV || code == KeyEvent.KEYCODE_TV_INPUT) {
             open = inputs();
@@ -270,8 +282,34 @@ public class RemoteKeys extends AccessibilityService {
         setServiceInfo(info);
     }
 
+    private static boolean isStockLauncherPackage(String pkg) {
+        if (pkg == null || "tv.afnon.home".equals(pkg)) return false;
+        return pkg.contains("launcher")
+            || pkg.contains("tivo")
+            || pkg.contains("homescreen")
+            || pkg.contains("katniss");
+    }
+
+    private void handleStockLauncherRedirect(AccessibilityEvent event) {
+        if (event == null || !Prefs.overrideHome(this)) return;
+        CharSequence pkg = event.getPackageName();
+        if (pkg != null) {
+            String packageName = pkg.toString();
+            if (isStockLauncherPackage(packageName)) {
+                try {
+                    Intent homeIntent = new Intent(this, MainActivity.class);
+                    homeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                            | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivity(homeIntent);
+                } catch (Exception ignored) {}
+            }
+        }
+    }
+
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+        handleStockLauncherRedirect(event);
         Redirects.onWindowChanged(this, event);
     }
 

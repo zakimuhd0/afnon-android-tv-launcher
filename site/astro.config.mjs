@@ -1,6 +1,6 @@
-// Pages are pre-rendered for Cairo (the app's default city) so search engines see real times;
+// Pages are pre-rendered for Kuala Lumpur (the app's default city) so search engines see real times;
 // in the browser everything is recomputed for the visitor's own city and clock.
-process.env.TZ = 'Africa/Cairo';
+process.env.TZ = 'Asia/Kuala_Lumpur';
 
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';

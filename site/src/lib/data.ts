@@ -34,8 +34,8 @@ export type Prefs = {
 export const adjustOf = (p: Prefs) => [0, 1, 2, 3, 4, 5].map((i) => Math.max(-30, Math.min(30, p.adjust?.[i] ?? 0)));
 
 export const DEFAULT_PREFS: Prefs = {
-  city: 'cairo', method: null, hanafi: false, hijriOffset: 0, clock: 'system', digits: 'auto',
-  remind: 15, adhan: true, station: 'cairo',
+  city: 'kualalumpur', method: null, hanafi: false, hijriOffset: 0, clock: 'system', digits: 'auto',
+  remind: 15, adhan: true, station: 'ikim',
 };
 
 export const cityOf = (p: Prefs) => CITIES.find((c) => c.id === p.city) ?? CITIES[0];

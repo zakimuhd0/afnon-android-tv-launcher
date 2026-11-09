@@ -26,6 +26,9 @@ if [ -z "$ADB_BIN" ]; then
   }
 fi
 if [ -z "$TV" ]; then
+  TV=$("$ADB_BIN" devices | grep -E '\sdevice$' | head -n 1 | awk '{print $1}')
+fi
+if [ -z "$TV" ]; then
   echo "Set TV=<ip>:5555 first (the TV's address, shown in its network settings)." >&2
   exit 1
 fi

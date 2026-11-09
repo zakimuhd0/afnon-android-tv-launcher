@@ -94,8 +94,12 @@ public final class SetupProvider extends ContentProvider {
     private static JSONArray cities() throws JSONException {
         JSONArray a = new JSONArray();
         for (Prefs.City city : Prefs.CITIES) {
-            a.put(new JSONObject().put("id", city.id).put("ar", city.ar).put("en", city.en)
-                .put("countryAr", city.countryAr).put("countryEn", city.countryEn).put("region", Prefs.region(city)));
+            a.put(new JSONObject()
+                    .put("id", city.id)
+                    .put("negeri", city.negeri)
+                    .put("daerah", city.daerah)
+                    .put("lat", city.lat)
+                    .put("lng", city.lng));
         }
         return a;
     }

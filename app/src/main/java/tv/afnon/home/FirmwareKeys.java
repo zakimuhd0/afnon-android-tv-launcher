@@ -35,8 +35,8 @@ final class FirmwareKeys {
 
     /** Firmware source (input) menus, tried in order when there is no Android TV inputs screen. */
     private static final String[][] SOURCE_MENUS = {
-        // CVTE: its hotkey service leaves the Source key to the app in front, and the stock launcher opened this.
-        {"com.cvte.tv.globalui", "com.cvte.tv.globalui.InputSourceActivity"},
+            // CVTE: its hotkey service leaves the Source key to the app in front, and the stock launcher opened this.
+            {"com.cvte.tv.globalui", "com.cvte.tv.globalui.InputSourceActivity"},
     };
 
     /** The TV's own source menu, or null if this firmware has none we know. */

@@ -14,7 +14,7 @@ export function makeCtx(lang: Lang, prefs: Prefs, now: Date, mode?: string): Ctx
   return { now, prefs, t, h24: is24h(prefs), day: prayerDay(now, prefs), mode, lang };
 }
 
-/** Build-time context: Cairo, the app's defaults, at the test moment for this page's mode. */
+/** Build-time context: Kuala Lumpur, the app's defaults, at the test moment for this page's mode. */
 export function buildCtx(lang: Lang, mode?: string) {
   const real = new Date();
   return makeCtx(lang, DEFAULT_PREFS, new Date(real.getTime() + (mode ? shiftFor(mode, DEFAULT_PREFS, real) : 0)), mode);

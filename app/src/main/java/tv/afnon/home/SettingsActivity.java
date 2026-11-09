@@ -2,10 +2,13 @@ package tv.afnon.home;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.provider.Settings;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -15,16 +18,14 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-
-import com.batoulapps.adhan.CalculationMethod;
-import com.batoulapps.adhan.Madhab;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Afnon Settings (design/Settings.dc.html): sections down the start side, the section's rows beside them, and a
@@ -99,7 +100,7 @@ public class SettingsActivity extends Screen {
     private final FocusTile[] nav = new FocusTile[SECTIONS];
     private final TextView[] navLabel = new TextView[SECTIONS];
     private final List<Row> rows = new ArrayList<>();
-    private TextView sectionLabel, previewValue;
+    private TextView sectionLabel;
     private LinearLayout hints;
     private TextView saved;
     private final Runnable hideSaved = () -> saved.animate().alpha(0).setDuration(Tokens.MOTION_OVERLAY_FADE_MS);
@@ -141,19 +142,6 @@ public class SettingsActivity extends Screen {
         place(head, 96, 56, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
         for (int i = 0; i < SECTIONS; i++) nav[i] = navItem(i);
-
-        LinearLayout preview = new LinearLayout(this);
-        preview.setOrientation(LinearLayout.VERTICAL);
-        preview.setPadding(Ui.ipx(24), Ui.ipx(20), Ui.ipx(24), Ui.ipx(20));
-        preview.setBackground(round(Tokens.LAPIS_800, 16));
-        TextView pl = text(ui400, 20, Tokens.MIST_400);
-        pl.setText(t.preview());
-        previewValue = text(display, Tokens.FONT_SIZE_DISPLAY_XS, Tokens.GOLD_400);
-        preview.addView(pl);
-        preview.addView(previewValue);
-        lineHeight(previewValue, 1.2f);
-        ((LinearLayout.LayoutParams) previewValue.getLayoutParams()).topMargin += Ui.ipx(6);
-        place(preview, 96, 1080 - 56 - 124, 424, 124);
 
         sectionLabel = caps(text(ui400, 22, Tokens.MIST_400));
         sectionLabel.setAllCaps(!t.ar);
@@ -291,34 +279,11 @@ public class SettingsActivity extends Screen {
             case PRAYER: return Arrays.asList(
                 new Row(VALUE) {
                     String label() { return t.location(); }
-                    String help() { Prefs.City city = Prefs.city(c); return t.locationHelp(city.lat, city.lng); }
-                    String value() { Prefs.City city = Prefs.city(c); return t.ar ? t.place(city.ar, city.countryAr) : t.place(city.en, city.countryEn); }
+                    String help() { Prefs.City city = Prefs.city(c); return city.id + " · " + city.negeri; }
+                    String value() { Prefs.City city = Prefs.city(c); return city.daerah + " (" + city.id + ")"; }
                     void open() {
-                        // The next list opens once this chooser has closed (closeChooser runs after the pick).
-                        openChooser(t.region(), t.regions(), Prefs.region(Prefs.city(c)),
-                            i -> root.post(() -> openCountries(i, this::open)));
+                        openStates(null);
                     }
-                },
-                new Row(VALUE) {
-                    String label() { return t.method(); }
-                    String help() { return t.methodAngles(Prefs.method(c)); }
-                    String value() { return t.methodName(Prefs.method(c)); }
-                    void open() {
-                        String[] names = new String[Prefs.METHODS.length];
-                        int sel = 0;
-                        for (int i = 0; i < names.length; i++) {
-                            names[i] = t.methodName(Prefs.METHODS[i]);
-                            if (Prefs.METHODS[i] == Prefs.method(c)) sel = i;
-                        }
-                        openChooser(t.method(), names, sel, i -> { Prefs.setMethod(c, Prefs.METHODS[i]); showSaved(); });
-                    }
-                },
-                new Row(SEG) {
-                    String label() { return t.asrSchool(); }
-                    String help() { return t.asrSchoolHelp(); }
-                    String[] segs() { return t.asrSchools(); }
-                    int selected() { return Prefs.madhab(c) == Madhab.HANAFI ? 1 : 0; }
-                    void select(int i) { Prefs.setMadhab(c, i == 1 ? Madhab.HANAFI : Madhab.SHAFI); }
                 },
                 new Row(STEP) {
                     String label() { return t.hijriAdjust(); }
@@ -455,6 +420,22 @@ public class SettingsActivity extends Screen {
                     void open() { startSafely(new Intent(Settings.ACTION_WIFI_SETTINGS)); }
                 });
             default: return Arrays.asList(
+                new Row(TOGGLE) {
+                    String label() { return t.overrideHomeRow(); }
+                    String help() { return t.overrideHomeHelp(); }
+                    boolean on() { return Prefs.overrideHome(c); }
+                    void set(boolean on) { Prefs.setOverrideHome(c, on); }
+                },
+                new Row(VALUE) {
+                    String label() { return t.accessibilityRow(); }
+                    String help() { return t.accessibilityHelp(); }
+                    void open() { startSafely(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)); }
+                },
+                new Row(VALUE) {
+                    String label() { return t.launcherRow(); }
+                    String help() { return t.launcherHelp(); }
+                    void open() { openLauncherSettings(); }
+                },
                 new Row(VALUE) {
                     String label() { return t.deviceRow(); }
                     String help() { return t.deviceHelp(); }
@@ -466,6 +447,69 @@ public class SettingsActivity extends Screen {
                     String value() { return t.updateValue(Updates.state(), Updates.percent(), Updates.latest()); }
                     void open() { Updates.press(c); refresh(); }
                 });
+        }
+    }
+
+    private void openLauncherSettings() {
+        // 1. Standard HOME settings, if the device actually has it
+        Intent homeSettings = new Intent(Settings.ACTION_HOME_SETTINGS);
+        if (getPackageManager().resolveActivity(homeSettings, PackageManager.MATCH_DEFAULT_ONLY) != null) {
+            try {
+                startActivity(homeSettings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                return;
+            } catch (Exception ignored) {}
+        }
+
+        // 2. Find the CURRENT default HOME first
+        String target = null;
+        Intent home = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME);
+        ResolveInfo ri = getPackageManager().resolveActivity(home, PackageManager.MATCH_DEFAULT_ONLY);
+        if (ri != null && ri.activityInfo != null
+                && !"android".equals(ri.activityInfo.packageName)
+                && !ri.activityInfo.packageName.contains("ResolverActivity")) {
+            target = ri.activityInfo.packageName;
+        }
+
+        // 3. If no current default, look for a known installed stock launcher
+        if (target == null) {
+            String[] stockLaunchers = {
+                    "com.google.android.tvlauncher",          // <-- added (your TiVo)
+                    "com.google.android.apps.tv.launcherx",
+                    "com.google.android.tv.launcher",
+                    "com.android.tv.launcher",
+                    "com.tivo.tv.launcher",
+                    "com.amazon.tv.launcher"
+            };
+            for (String pkg : stockLaunchers) {
+                if (Apps.launchIntent(this, pkg) != null) {
+                    target = pkg;
+                    break;
+                }
+            }
+        }
+
+        // 4. Open App Details for whichever we found
+        if (target != null) {
+            try {
+                Intent appDetails = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                appDetails.setData(Uri.parse("package:" + target));
+                appDetails.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(appDetails);
+                return;
+            } catch (Exception ignored) {}
+        }
+
+        // 5. Fallbacks
+        try {
+            startActivity(new Intent(Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (Exception ignored) {
+            try {
+                startActivity(new Intent(Settings.ACTION_SETTINGS)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            } catch (Exception ignored2) {
+                Toast.makeText(this, "Open Settings → Apps to change the launcher", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -575,7 +619,6 @@ public class SettingsActivity extends Screen {
     private void refresh() {
         day = new PrayerDay(this, new Date());
         for (Row r : rows) render(r, r.tile.isFocused());
-        previewValue.setText(time(day.times[PrayerDay.ASR], 1f));
     }
 
     private void render(Row r, boolean focused) {
@@ -819,48 +862,38 @@ public class SettingsActivity extends Screen {
 
     // ---------------------------------------------------------------- list chooser
 
-    /** Location's second step: one region's countries, A to Z in the app's language ("ال" not counted). Back runs back. */
-    private void openCountries(int region, Runnable back) {
-        List<String> countries = new ArrayList<>();
-        for (String en : Prefs.REGIONS[region]) {
-            for (Prefs.City city : Prefs.CITIES) {
-                if (city.countryEn.equals(en)) { countries.add(t.ar ? city.countryAr : city.countryEn); break; }
-            }
-        }
-        java.text.Collator order = java.text.Collator.getInstance(t.ar ? new Locale("ar") : Locale.ENGLISH);
-        Collections.sort(countries, (a, b) -> order.compare(a.replaceFirst("^ال", ""), b.replaceFirst("^ال", "")));
+    /** Location's first step: states (Negeri). */
+    private void openStates(Runnable back) {
+        String[] states = Prefs.STATES;
         Prefs.City now = Prefs.city(this);
-        int sel = countries.indexOf(t.ar ? now.countryAr : now.countryEn);
-        Runnable self = () -> openCountries(region, back);
-        openChooser(t.regions()[region], countries.toArray(new String[0]), sel,
-            i -> root.post(() -> openCities(countries.get(i), self)));
+        int sel = 0;
+        for (int i = 0; i < states.length; i++) {
+            if (states[i].equals(now.negeri)) { sel = i; break; }
+        }
+        openChooser(t.location(), states, sel, i -> root.post(() -> openZones(states[i], () -> openStates(null))));
         chooserBack = back;
     }
 
-    /** Location's third step: one country's cities. A country with a single city takes it at once. Back runs back. */
-    private void openCities(String country, Runnable back) {
+    /** Location's second step: zones in selected state. */
+    private void openZones(String state, Runnable back) {
         List<Integer> found = new ArrayList<>();
         for (int i = 0; i < Prefs.CITIES.length; i++) {
-            Prefs.City city = Prefs.CITIES[i];
-            if ((t.ar ? city.countryAr : city.countryEn).equals(country)) found.add(i);
-        }
-        if (found.size() == 1) {
-            Prefs.setCity(this, found.get(0));
-            refresh();
-            focusRow(rowIndex);
-            showSaved();
-            return;
+            if (Prefs.CITIES[i].negeri.equals(state)) found.add(i);
         }
         String[] names = new String[found.size()];
         int current = Prefs.cityIndex(this);
-        // -1 when the saved city is in another country: nothing is marked, focus starts on the first city.
-        int sel = -1;
+        int sel = 0;
         for (int k = 0; k < names.length; k++) {
             Prefs.City city = Prefs.CITIES[found.get(k)];
-            names[k] = t.ar ? city.ar : city.en;
+            names[k] = city.daerah + " (" + city.id + ")";
             if (found.get(k) == current) sel = k;
         }
-        openChooser(country, names, sel, k -> { Prefs.setCity(this, found.get(k)); showSaved(); });
+        openChooser(state, names, sel, k -> {
+            Prefs.setCity(this, found.get(k));
+            Calendar cal = Calendar.getInstance();
+            JakimApi.ensureMonthFetched(this, Prefs.city(this).id, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, this::refresh);
+            showSaved();
+        });
         chooserBack = back;
     }
 

@@ -22,7 +22,7 @@ final class Setup {
     private Setup() {}
 
     static final String PACKAGE = "tv.afnon.home";
-    private static final String REPO = "egyjs/afnon-android-tv-launcher";
+    private static final String REPO = "zakimuhd0/afnon-android-tv-launcher";
     private static final String LATEST = "https://github.com/" + REPO + "/releases/latest";
     private static final String APK = LATEST + "/download/afnon.apk";
     private static final String RAW = "https://raw.githubusercontent.com/" + REPO + "/";

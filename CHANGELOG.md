@@ -106,8 +106,8 @@ All notable changes to Afnon. Versions match `versionName` in `app/build.gradle`
   solar positions, since its parameters can't round, take seconds or set a horizon. Against the October 2026 table
   98.8% of the 8184 times are on the minute and the rest a minute off; Tetouan's 2019 year, not fitted to, is 90.8%
   on the minute and within one throughout. Each city sits at the point the table matches, within 7 km of its centre.
-  Morocco keeps legal time on GMT since 20 September 2026 (decree 2.26.530): TVs whose time-zone data predates it
-  show Africa/Casablanca an hour ahead, so set such a TV to a GMT+0 zone until its firmware updates.
+  Morocco keeps legal time on GMT since 20 September 2026 (decree 2.26.530): TVs whose time-city data predates it
+  show Africa/Casablanca an hour ahead, so set such a TV to a GMT+0 city until its firmware updates.
 
 ### Changed
 - Web preview (`site/`): night mode (Home's button and Settings → Display), the radio card's Station button, Settings →

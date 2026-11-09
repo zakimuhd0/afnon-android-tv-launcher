@@ -167,7 +167,7 @@ abstract class Screen extends Activity {
         boolean eastern = digits.isEmpty() ? ar : "eastern".equals(digits);
         Text t = new Text(ar, eastern);
         Prefs.City city = Prefs.city(c);
-        t.cityName = ar ? city.ar : city.en;
+        t.cityName = city.daerah + " (" + city.id + ")";
         return t;
     }
 
