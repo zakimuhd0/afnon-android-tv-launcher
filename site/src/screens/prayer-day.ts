@@ -1,7 +1,6 @@
-// Prayer day's live content, from PrayerDayActivity.render/renderMinute/renderPicker and QiblaView.
 import { Coordinates, Qibla } from 'adhan';
 import type { Ctx, Model } from '../lib/ctx';
-import { methodOf } from '../lib/data';
+import { cityOf } from '../lib/data';
 import { DHUHR, SUNRISE, clock, duration, gregorian, hijri, secondsUntil } from '../lib/prayer';
 import type { Text } from '../lib/text';
 import { archModel, prayerNames } from './home';
@@ -81,7 +80,7 @@ export function prayerDayModel(c: Ctx): Model {
   if (facing < 0) {
     // Room direction unknown: north-up.
     html.northLabel = t.s('north');
-    html.direction = qiblaDirection(t, qibla, day.city[t.lang]);
+    html.direction = qiblaDirection(t, qibla, city.daerah);
     html.qiblaHint = t.s('qiblaHint');
     Object.assign(attr, dialAttrs(qibla, null));
   } else {
